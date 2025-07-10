@@ -1,6 +1,7 @@
-fastapi
+fastapi==0.115.14
 uvicorn[standard]
-google-cloud-speech
-google-cloud-translate
-google-cloud-dialogflow-cx
-python-multipart 
+google-cloud-speech==2.33.0
+google-cloud-translate==3.21.0
+google-cloud-dialogflow-cx==1.41.1
+python-multipart==0.0.20
+google-cloud-bigquery==3.34.0
