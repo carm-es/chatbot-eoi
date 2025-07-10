@@ -2,7 +2,7 @@ import subprocess
 import tempfile
 
 from google.cloud import speech_v1p1beta1 as speech
-from app.utils.translate import translate_text
+from utils.translate import translate_text
 
 
 # Initializing Google services

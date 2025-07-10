@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
-from app.services import speech_to_text, conversation_agent, big_query
-from app.utils.translate import detect_language, translate_text, unescape_html
+from services import speech_to_text, conversation_agent, big_query
+from utils.translate import detect_language, translate_text, unescape_html
 
 import logging
 

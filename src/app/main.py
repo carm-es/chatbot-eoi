@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-from app.endpoints import ask_endpoint
+from endpoints import ask_endpoint
 
 app = FastAPI()
 
