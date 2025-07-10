@@ -1,10 +1,10 @@
 steps:
   - name: "gcr.io/cloud-builders/docker"
     args:
-      ["build", "-t", "europe-southwest1-docker.pkg.dev/$PROJECT_ID/chatbot-eoi/chatbot-eoi:$SHORT_SHA", ".",]
+      ["build", "-t", "europe-southwest1-docker.pkg.dev/$PROJECT_ID/conversation-manager/chatboteoi:$SHORT_SHA", ".",]
   - name: "gcr.io/cloud-builders/docker"
     args:
-        ["push", "europe-southwest1-docker.pkg.dev/$PROJECT_ID/chatbot-eoi/chatbot-eoi:$SHORT_SHA"]
+        ["push", "europe-southwest1-docker.pkg.dev/$PROJECT_ID/conversation-manager/chatboteoi:$SHORT_SHA"]
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     args:
@@ -13,12 +13,12 @@ steps:
       - "deploy"
       - "chatbot-eoi"
       - "--image"
-      - "europe-southwest1-docker.pkg.dev/chatboteoi/chatbot-eoi/chatbot-eoi:$SHORT_SHA"
+      - "europe-southwest1-docker.pkg.dev/chatboteoi/conversation-manager/chatboteoi:$SHORT_SHA"
       - "--region=europe-southwest1"
       - "--platform=managed"
       - "--allow-unauthenticated"
 images:
-  - "europe-southwest1-docker.pkg.dev/$PROJECT_ID/chatbot-eoi/chatbot-eoi:$SHORT_SHA"
+  - "europe-southwest1-docker.pkg.dev/$PROJECT_ID/conversation-manager/chatboteoi:$SHORT_SHA"
 
 options:
   logging: CLOUD_LOGGING_ONLY
