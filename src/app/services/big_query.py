@@ -9,7 +9,6 @@ from google.cloud import bigquery
 client = bigquery.Client()
 
 TABLE_ID = os.getenv("TABLE")
-print(TABLE_ID)
 
 async def insert_interaction(session_id: str, interaction_id: str, source: str, user_input: str, language: str, dialog_response: str):
     """
@@ -33,7 +32,7 @@ async def insert_interaction(session_id: str, interaction_id: str, source: str, 
     )
     try:
         query_job = client.query(query, job_config=job_config)
-        query_job.result()  # Espera a que termine
+        query_job.result()
         logging.info(f"Interacción insertada en BigQuery: session_id={session_id}, interaction_id={interaction_id}")
     except Exception as e:
         logging.error(f"Error insertando interacción en BigQuery: {e}")
@@ -68,7 +67,7 @@ async def add_rating(session_id: str, interaction_id: str, rating: str = None, f
     job_config = bigquery.QueryJobConfig(query_parameters=params)
     try:
         query_job = client.query(query, job_config=job_config)
-        query_job.result()  # Espera a que termine
+        query_job.result()
         logging.info(f"Valoración/feedback actualizado en BigQuery: session_id={session_id}, interaction_id={interaction_id}")
     except Exception as e:
         logging.error(f"Error actualizando valoración/feedback en BigQuery: {e}")

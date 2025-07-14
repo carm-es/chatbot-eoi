@@ -6,7 +6,6 @@ from endpoints import ask_endpoint
 
 app = FastAPI()
 
-# Endpoints of the application
 app.include_router(ask_endpoint.router)
 
 app.add_middleware(

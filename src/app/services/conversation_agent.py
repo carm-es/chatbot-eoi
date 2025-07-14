@@ -27,7 +27,6 @@ NOT_FOUND = ["Lo siento, pero no tengo información suficiente para poder respon
 
 session_client = dialogflowcx.SessionsClient()
 
-# Crea una nueva sesión y envía el mensaje
 def send_message(text: str, session_id: str = None):
     """
     Send the message to the agent
@@ -39,22 +38,18 @@ def send_message(text: str, session_id: str = None):
     Returns:
         dict: Dictionary containing "message" and "session_id"
     """
-    # Create the session and access to the agent
     if session_id is None:
         session_id = str(uuid.uuid4())
     session_path = session_client.session_path(PROJECT_ID, LOCATION, AGENT_ID, session_id)
     
-    # Prepare the message
     text_input = dialogflowcx.TextInput(text=text)
     query_input = dialogflowcx.QueryInput(text=text_input, language_code="es")
     
-    # Ask the message
     request = dialogflowcx.DetectIntentRequest(
         session=session_path,
         query_input=query_input
     )
     
-    # Get the response from the model
     response = session_client.detect_intent(request=request)
     message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
     response_id = response.response_id
