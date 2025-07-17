@@ -33,7 +33,7 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
         input_language = language
     logging.info(f"Pregunta original: '{message}' | Idioma detectado: {detected_language} | Idioma usado: {input_language}")
     message_es = translate_text(message, 'es') if input_language != 'es' else message
-    logging.info(f"Pregunta en español enviada a Dialogflow: '{message_es}'")
+    logging.info(f"Pregunta en español enviada para Dialogflow: '{message_es}'")
     response_data = conversation_agent.send_message(message_es, session_id)
     response_es = response_data["message"]
     session_id = response_data["session_id"]
