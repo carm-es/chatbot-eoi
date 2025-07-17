@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Form
 from pydantic import BaseModel
 from services import speech_to_text, conversation_agent, big_query
 from utils.translate import detect_language, translate_text, unescape_html
+import requests
 
 import logging
 
@@ -128,3 +129,22 @@ async def rate_response(rate_request: RateRequest):
         "valoration": rate_request.valoration,
         "description": rate_request.description
     }
+
+@router.post('/cambio-grupo')
+async def cambio_grupo(nre: int = Form(...)):
+    url = "http://chatbot-eoi.murciaeduca.es/peticiones/index.php"
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0"
+    }
+    data = {"accion": "cambio-de-grupo", "NRE": int(nre)}
+    try:
+        response = requests.post(url, json=data, headers=headers, timeout=30)
+        logging.info(f"Respuesta recibida: status_code={response.status_code}, contenido={response.text}")
+        if response.status_code == 200:
+            return {"result": "ok"}
+        else:
+            return {"result": "error"}
+    except Exception as e:
+        logging.error(f"Excepción al hacer la petición: {e}")
+        return {"result": "error"}
