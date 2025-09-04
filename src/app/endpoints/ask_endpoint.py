@@ -6,6 +6,9 @@ import requests
 
 import logging
 
+MAX_NUM_WORDS=4
+DEFAULT_LANGUAGE='es'
+
 router = APIRouter()
 
 @router.post('/ask/text')
@@ -21,27 +24,42 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     Returns:
         dict: "response" with the agent's reply in the user's language and "session_id".
     """
-    detected_language = detect_language(message)
+
+    ## Detectar idioma solo cuando haya mas X palabras
+    num_words = len(message.split())
+    detected_language = "und"
+    if num_words > MAX_NUM_WORDS:
+        detected_language = detect_language(message)
 
     if not language or language == 'und':
-        input_language = detected_language
+        if num_words <= MAX_NUM_WORDS:
+            input_language = DEFAULT_LANGUAGE
+        else:
+            input_language = detected_language
     elif detected_language == 'und':
         input_language = language
-    elif language != detected_language:
+    elif language != detected_language and num_words > MAX_NUM_WORDS:
         input_language = detected_language
     else:
         input_language = language
+
+    if input_language == 'und':
+        input_language = DEFAULT_LANGUAGE
+
     logging.info(f"Pregunta original: '{message}' | Idioma detectado: {detected_language} | Idioma usado: {input_language}")
-    message_es = translate_text(message, 'es') if input_language != 'es' else message
+    message_es = translate_text(message, DEFAULT_LANGUAGE) if input_language != DEFAULT_LANGUAGE else message
+
     logging.info(f"Pregunta en español enviada para Dialogflow: '{message_es}'")
     response_data = conversation_agent.send_message(message_es, session_id)
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
     logging.info(f"Respuesta en español de Dialogflow: '{response_es}'")
+
     final_response = translate_text(response_es, input_language)
     final_response = unescape_html(final_response)
     logging.info(f"Session ID: {session_id} - Response ID: {response_id}")
+
     await big_query.insert_interaction(
         session_id=session_id,
         interaction_id=response_id,
@@ -66,26 +84,43 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
         dict: "response" with the agent's reply in the user's language and "session_id".
     """
     text = speech_to_text.transcribe_and_translate(file)
-    detected_language = detect_language(text)
+
+    ## Detectar idioma solo cuando haya mas X palabras
+    num_words = len(text.split())
+    detected_language = "und"
+    if num_words > MAX_NUM_WORDS:
+        detected_language = detect_language(text)
+
     if not language or language == 'und':
-        input_language = detected_language
+        if num_words <= MAX_NUM_WORDS:
+            input_language = DEFAULT_LANGUAGE
+        else:
+            input_language = detected_language
     elif detected_language == 'und':
         input_language = language
-    elif language != detected_language:
+    elif language != detected_language and num_words > MAX_NUM_WORDS:
         input_language = detected_language
     else:
         input_language = language
+
+    if input_language == 'und':
+        input_language = DEFAULT_LANGUAGE
+
     logging.info(f"Pregunta original (voz): '{text}' | Idioma detectado: {detected_language} | Idioma usado: {input_language}")
-    text_es = translate_text(text, 'es') if input_language != 'es' else text
+
+    text_es = translate_text(text, DEFAULT_LANGUAGE) if input_language != DEFAULT_LANGUAGE else text
     logging.info(f"Pregunta en español enviada a Dialogflow: '{text_es}'")
+
     response_data = conversation_agent.send_message(text_es, session_id)
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
     logging.info(f"Respuesta en español de Dialogflow: '{response_es}'")
+
     final_response = translate_text(response_es, input_language)
     final_response = unescape_html(final_response)
     logging.info(f"Session ID: {session_id} - Response ID: {response_id}")
+
     await big_query.insert_interaction(
         session_id=session_id,
         interaction_id=response_id,
