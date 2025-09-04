@@ -10,14 +10,14 @@ client = bigquery.Client()
 
 TABLE_ID = os.getenv("TABLE")
 
-async def insert_interaction(session_id: str, interaction_id: str, source: str, user_input: str, language: str, dialog_response: str):
+async def insert_interaction(session_id: str, interaction_id: str, source: str, user_input: str, language: str, dialog_response: str, code: str):
     """
     Inserta una nueva interacción en la tabla de BigQuery.
     """
     timestamp = datetime.now(timezone.utc)
     query = f"""
-        INSERT INTO `{TABLE_ID}` (session_id, interaction_id, source, user_input, language, dialog_response, timestamp)
-        VALUES (@session_id, @interaction_id, @source, @user_input, @language, @dialog_response, @timestamp)
+        INSERT INTO `{TABLE_ID}` (session_id, interaction_id, source, user_input, language, dialog_response, timestamp, dialogflow_code)
+        VALUES (@session_id, @interaction_id, @source, @user_input, @language, @dialog_response, @timestamp, @dialogflow_code )
     """
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -28,6 +28,7 @@ async def insert_interaction(session_id: str, interaction_id: str, source: str, 
             bigquery.ScalarQueryParameter("language", "STRING", language),
             bigquery.ScalarQueryParameter("dialog_response", "STRING", dialog_response),
             bigquery.ScalarQueryParameter("timestamp", "TIMESTAMP", timestamp),
+            bigquery.ScalarQueryParameter("dialogflow_code", "STRING", code),
         ]
     )
     try:

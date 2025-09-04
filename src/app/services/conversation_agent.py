@@ -53,8 +53,10 @@ def send_message(text: str, session_id: str = None):
     response = session_client.detect_intent(request=request)
     message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
     response_id = response.response_id
-    
+    code_result = 'OK'
+
     if "NOT FOUND" in message:
         message = random.choice(NOT_FOUND)
+        code_result = 'NOT_FOUND'
     
-    return {"message": message, "session_id": session_id, "response_id": response_id}
+    return {"message": message, "session_id": session_id, "response_id": response_id, "code_result": code_result}

@@ -54,6 +54,7 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
+    dialogflow_code = response_data["code_result"]
     logging.info(f"Respuesta en español de Dialogflow: '{response_es}'")
 
     final_response = translate_text(response_es, input_language)
@@ -66,7 +67,8 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
         source="Página web",
         user_input=message,
         language=input_language,
-        dialog_response=final_response
+        dialog_response=final_response,
+        code=dialogflow_code
     )
     return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language}
 
