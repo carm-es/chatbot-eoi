@@ -57,7 +57,7 @@ def send_message(text: str, session_id: str = None):
     code_result = 'OK'
 
     if "NOT FOUND" in message:
-        message = random.choice(NOT_FOUND)
         code_result = 'NOT_FOUND'
-    
+        message = random.choice(NOT_FOUND)
+
     return {"message": message, "session_id": session_id, "response_id": response_id, "code_result": code_result, "raw_response": raw_message}
