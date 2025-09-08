@@ -1,7 +1,7 @@
 import os
 import uuid
 import random
-
+import logging
 from dotenv import load_dotenv
 
 from google.cloud import dialogflowcx_v3beta1 as dialogflowcx
@@ -14,7 +14,7 @@ PROJECT_ID = os.getenv('DIALOGFLOW_PROJECT_ID')
 LOCATION = os.getenv('DIALOGFLOW_LOCATION')
 AGENT_ID = os.getenv('AGENT_ID')
 
-NOT_FOUND = ["Lo siento, pero no tengo información suficiente para poder responderte", 
+NOT_FOUND = ["Lo siento, pero no tengo información suficiente para poder responderte",
              "Disculpa mis limitaciones, no tengo información suficiente para responderte",
              "Perdona, no dispongo de información para poder resolver tu duda",
              "Lamento no poder responder a tu pregunta. Carezco de información suficiente para poder responderte, pero puedo ayudarte con otras consultas",
@@ -55,9 +55,12 @@ def send_message(text: str, session_id: str = None):
     raw_message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
     response_id = response.response_id
     code_result = 'OK'
+    logging.info(f"Pregunta original: '{message}' | RAW : {raw_message} ....antes de nada de nada!!! ")
 
     if "NOT FOUND" in message:
         code_result = 'NOT_FOUND'
         message = random.choice(NOT_FOUND)
+
+    logging.info(f"Pregunta original: '{message}' | RAW : {raw_message} ....despues de procesar ")
 
     return {"message": message, "session_id": session_id, "response_id": response_id, "code_result": code_result, "raw_response": raw_message}
