@@ -1,4 +1,5 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, Request, Depends
+from typing import Dict
 from pydantic import BaseModel
 from services import speech_to_text, conversation_agent, big_query
 from utils.translate import detect_language, translate_text, unescape_html
@@ -11,8 +12,31 @@ DEFAULT_LANGUAGE='es'
 
 router = APIRouter()
 
+
+def get_client_info(request: Request) -> Dict[str, str]:
+    def get_real_ip():
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            return forwarded_for.split(",")[0].strip()
+
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            return real_ip
+
+        return request.client.host
+
+    return {
+        "ip": get_real_ip(),
+        "user_agent": request.headers.get("user-agent", "Desconocido"),
+        "host": request.headers.get("host", "Desconocido"),
+        "referer": request.headers.get("referer", "Directo")
+    }
+
 @router.post('/ask/text')
-async def ask_text(message: str = Form(...), session_id: str = Form(None), language: str = Form(None)):
+async def ask_text(message: str = Form(...), session_id: str = Form(None), language: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
+
+    logging.info(f"Petición desde IP: {client_info['ip']}, User-Agent: {client_info['user_agent']}, HOST: {client_info['host']} , Referer: {client_info['referer']}")
+
     """
     Endpoint to send text messages to the agent.
 
@@ -55,7 +79,9 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
     dialogflow_code = response_data["code_result"]
-    logging.info(f"Respuesta en español de Dialogflow: '{response_es}'")
+    raw_resp = response_data["raw_response"]
+
+    logging.info(f"Respuesta en español de Dialogflow: '{response_es}' y '{raw_resp}'")
 
     final_response = translate_text(response_es, input_language)
     final_response = unescape_html(final_response)
