@@ -3,6 +3,7 @@ import uuid
 import random
 import logging
 from dotenv import load_dotenv
+from typing import Dict
 
 from google.cloud import dialogflowcx_v3beta1 as dialogflowcx
 
@@ -26,6 +27,27 @@ NOT_FOUND = ["Lo siento, pero no tengo información suficiente para poder respon
              "Ahora mismo no tengo datos para responder, pero me actualizan constantemente, pregúntame algo más a ver como sale 😅"]
 
 session_client = dialogflowcx.SessionsClient()
+
+def get_response_info(message: str) -> Dict[str, str]:
+    def get_result_code():
+        if "NOT FOUND" in message:
+            return "NOT_FOUND"
+        if not message:
+            return "NOT_FOUND"
+        return "OK"
+
+    def get_response():
+        if "NOT FOUND" in message:
+            return random.choice(NOT_FOUND)
+        if not message:
+            return random.choice(NOT_FOUND)
+        return message
+
+    return {
+        "raw": message,
+        "result": get_result_code(),
+        "response": get_response()
+    }
 
 def send_message(text: str, session_id: str = None):
     """
@@ -52,15 +74,8 @@ def send_message(text: str, session_id: str = None):
     
     response = session_client.detect_intent(request=request)
     message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
-    raw_message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
     response_id = response.response_id
-    code_result = 'OK'
-    logging.info(f"Pregunta original: '{message}' | RAW : {raw_message} ....antes de nada de nada!!! ")
 
-    if "NOT FOUND" in message:
-        code_result = 'NOT_FOUND'
-        message = random.choice(NOT_FOUND)
+    response_info = get_response_info(message)
 
-    logging.info(f"Pregunta original: '{message}' | RAW : {raw_message} ....despues de procesar ")
-
-    return {"message": message, "session_id": session_id, "response_id": response_id, "code_result": code_result, "raw_response": raw_message}
+    return {"message": response_info['response'], "session_id": session_id, "response_id": response_id, "code_result": response_info['result'], "raw_response": response_info['raw']}
