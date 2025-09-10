@@ -35,8 +35,6 @@ def get_client_info(request: Request) -> Dict[str, str]:
 @router.post('/ask/text')
 async def ask_text(message: str = Form(...), session_id: str = Form(None), language: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
 
-    logging.info(f"Petición desde IP: {client_info['ip']}, User-Agent: {client_info['user_agent']}, HOST: {client_info['host']} , Referer: {client_info['referer']}")
-
     """
     Endpoint to send text messages to the agent.
 
@@ -94,7 +92,8 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
         user_input=message,
         language=input_language,
         dialog_response=final_response,
-        code=dialogflow_code
+        code=dialogflow_code,
+        info_cli=client_info
     )
     return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language}
 
