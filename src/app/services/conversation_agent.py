@@ -34,14 +34,10 @@ def get_response_info(message: str) -> Dict[str, str]:
             return "NOT_FOUND"
         if not message:
             return "NOT_FOUND"
-        if "-ERROR_DIALOGFLOW-" in message:
-            return "ERROR"
         return "OK"
 
     def get_response():
         if "NOT FOUND" in message:
-            return random.choice(NOT_FOUND)
-        if "-ERROR_DIALOGFLOW-" in message:
             return random.choice(NOT_FOUND)
         if not message:
             return random.choice(NOT_FOUND)
@@ -89,7 +85,7 @@ def send_message(text: str, session_id: str = None):
         response_raw = response_info['raw']
 
     except Exception as e:
-        response_message = " -ERROR_DIALOGFLOW- "
+        response_message = random.choice(NOT_FOUND)
         response_result = "ERROR"
         response_raw = f"Error en llamada a Dialogflow: {str(e)}"
 
