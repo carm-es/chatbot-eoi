@@ -1,5 +1,6 @@
 import os
 import uuid
+import time
 import random
 import logging
 from dotenv import load_dotenv
@@ -62,8 +63,10 @@ def send_message(text: str, session_id: str = None):
     """
     if session_id is None:
         session_id = str(uuid.uuid4())
-    session_path = session_client.session_path(PROJECT_ID, LOCATION, AGENT_ID, session_id)
-    
+
+    session_dlgflow = f"{session_id}-{int(time.time())}"
+    session_path = session_client.session_path(PROJECT_ID, LOCATION, AGENT_ID, session_dlgflow)
+
     text_input = dialogflowcx.TextInput(text=text)
     query_input = dialogflowcx.QueryInput(text=text_input, language_code="es")
 
