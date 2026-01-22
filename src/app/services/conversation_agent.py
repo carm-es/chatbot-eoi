@@ -34,6 +34,8 @@ def get_response_info(message: str) -> Dict[str, str]:
             return "NOT_FOUND"
         if not message:
             return "NOT_FOUND"
+        if "ERROR" in message:
+            return "ERROR"
         return "OK"
 
     def get_response():
@@ -66,16 +68,28 @@ def send_message(text: str, session_id: str = None):
     
     text_input = dialogflowcx.TextInput(text=text)
     query_input = dialogflowcx.QueryInput(text=text_input, language_code="es")
-    
-    request = dialogflowcx.DetectIntentRequest(
-        session=session_path,
-        query_input=query_input
-    )
-    
-    response = session_client.detect_intent(request=request)
-    message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
-    response_id = response.response_id
 
-    response_info = get_response_info(message)
+    response_id = "NULL_ID"
+    try:
+        request = dialogflowcx.DetectIntentRequest(
+            session=session_path,
+            query_input=query_input
+        )
 
-    return {"message": response_info['response'], "session_id": session_id, "response_id": response_id, "code_result": response_info['result'], "raw_response": response_info['raw']}
+        response = session_client.detect_intent(request=request)
+        message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
+        response_id = response.response_id
+
+        response_info = get_response_info(message)
+
+        response_message =  response_info['response']
+        response_result = response_info['result']
+        response_raw = response_info['raw']
+
+    except Exception as e:
+        response_message = "NOT_FOUND"
+        response_result = "ERROR"
+        response_raw = f"Error en llamada a Dialogflow: {str(e)}"
+
+    return {"message": response_message, "session_id": session_id, "response_id": response_id, "code_result": response_result, "raw_response": response_raw}
+
