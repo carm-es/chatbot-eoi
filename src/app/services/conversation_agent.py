@@ -5,7 +5,7 @@ import random
 import logging
 from dotenv import load_dotenv
 from typing import Dict
-
+from datetime import datetime
 from google.cloud import dialogflowcx_v3beta1 as dialogflowcx
 
 
@@ -29,6 +29,14 @@ NOT_FOUND = ["Lo siento, pero no tengo información suficiente para poder respon
 
 session_client = dialogflowcx.SessionsClient()
 
+def get_current_month():
+    MESES_ES = [
+        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ]
+    return MESES_ES[datetime.now().month - 1]
+
+
 def get_response_info(message: str) -> Dict[str, str]:
     def get_result_code():
         if "NOT FOUND" in message:
@@ -50,7 +58,7 @@ def get_response_info(message: str) -> Dict[str, str]:
         "response": get_response()
     }
 
-def send_message(text: str, session_id: str = None):
+def send_message(text: str, session_id: str = None, school: str = "murcia" ):
     """
     Send the message to the agent
 
@@ -70,11 +78,22 @@ def send_message(text: str, session_id: str = None):
     text_input = dialogflowcx.TextInput(text=text)
     query_input = dialogflowcx.QueryInput(text=text_input, language_code="es")
 
+    # Inyectar variables de contexto
+    context_params = {
+        "escuela": school,
+        "mes_actual": get_current_month()
+    }
+    query_params = dialogflowcx.QueryParameters(
+        parameters=context_params,
+        time_zone="Europe/Paris"
+    )
+
     response_id = "NULL_ID"
     try:
         request = dialogflowcx.DetectIntentRequest(
             session=session_path,
-            query_input=query_input
+            query_input=query_input,
+            query_params=query_params
         )
 
         response = session_client.detect_intent(request=request)

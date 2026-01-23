@@ -2,13 +2,14 @@ from fastapi import APIRouter, UploadFile, File, Form, Request, Depends
 from typing import Dict
 from pydantic import BaseModel
 from services import speech_to_text, conversation_agent, big_query
-from utils.translate import detect_language, translate_text, unescape_html
+from utils.translate import detect_language, translate_text, unescape_html, detectar_escuela
 import requests
 
 import logging
 
 MAX_NUM_WORDS=4
 DEFAULT_LANGUAGE='es'
+DEFAULT_SCHOOL="murcia"
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ def get_client_info(request: Request) -> Dict[str, str]:
     }
 
 @router.post('/ask/text')
-async def ask_text(message: str = Form(...), session_id: str = Form(None), language: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
+async def ask_text(message: str = Form(...), session_id: str = Form(None), language: str = Form(None), school: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
 
     """
     Endpoint to send text messages to the agent.
@@ -71,8 +72,16 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     logging.info(f"Pregunta original: '{message}' | Idioma detectado: {detected_language} | Idioma usado: {input_language}")
     message_es = translate_text(message, DEFAULT_LANGUAGE) if input_language != DEFAULT_LANGUAGE else message
 
+    ## Detectar escuela
+    usage_school = school if school else DEFAULT_SCHOOL
+    detected_school = detectar_escuela(message_es)
+    if detected_school and detected_school != "" and detected_school != usage_school:
+        usage_school = detected_school
+
+    logging.info(f"Escuela recibida: '{school}' | Escuela detectada: {detected_school} | Se usará: {usage_school}")
+
     logging.info(f"Pregunta en español enviada para Dialogflow: '{message_es}'")
-    response_data = conversation_agent.send_message(message_es, session_id)
+    response_data = conversation_agent.send_message(message_es, session_id, usage_school )
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
@@ -88,17 +97,17 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     await big_query.insert_interaction(
         session_id=session_id,
         interaction_id=response_id,
-        source="Página web",
+        source="Página web texto",
         user_input=message,
         language=input_language,
         dialog_response=final_response,
         code=dialogflow_code,
         info_cli=client_info
     )
-    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language}
+    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language, "school": usage_school }
 
 @router.post('/ask/voice')
-async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), language: str = Form(None)):
+async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), language: str = Form(None), school: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
     """
     Endpoint to send voice messages to the agent.
 
@@ -138,10 +147,19 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
     text_es = translate_text(text, DEFAULT_LANGUAGE) if input_language != DEFAULT_LANGUAGE else text
     logging.info(f"Pregunta en español enviada a Dialogflow: '{text_es}'")
 
-    response_data = conversation_agent.send_message(text_es, session_id)
+    ## Detectar escuela
+    usage_school = school if school else DEFAULT_SCHOOL
+    detected_school = detectar_escuela(text_es)
+    if detected_school and detected_school != "" and detected_school != usage_school:
+        usage_school = detected_school
+
+    logging.info(f"Escuela recibida: '{school}' | Escuela detectada: {detected_school} | Se usará: {usage_school}")
+
+    response_data = conversation_agent.send_message(text_es, session_id, usage_school)
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
+    dialogflow_code = response_data["code_result"]
     logging.info(f"Respuesta en español de Dialogflow: '{response_es}'")
 
     final_response = translate_text(response_es, input_language)
@@ -151,12 +169,14 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
     await big_query.insert_interaction(
         session_id=session_id,
         interaction_id=response_id,
-        source="Página web",
+        source="Página web audio",
         user_input=text,
         language=input_language,
-        dialog_response=final_response
+        dialog_response=final_response,
+        code=dialogflow_code,
+        info_cli=client_info
     )
-    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language}
+    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language, "school": usage_school }
 
 class RateRequest(BaseModel):
     response_id: str

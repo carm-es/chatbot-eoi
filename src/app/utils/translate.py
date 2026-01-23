@@ -1,5 +1,7 @@
-from google.cloud import translate_v2 as translate
+import re
 import html
+from google.cloud import translate_v2 as translate
+from collections import Counter, defaultdict
 
 translate_client = translate.Client()
 
@@ -42,4 +44,82 @@ def detect_language_ranking(text):
             {'language': d.get('language'), 'confidence': d.get('confidence', 0)}
             for d in ranking
         ]
-    return [] 
+    return []
+
+
+def detectar_aparicion_escuela( texto: str ):
+    """
+    Devuelve un ranking de ocurrencias de nombres de eois y extensiones
+    """
+    texto = texto.lower()
+    mapa_topico_palabras = {
+        "caravaca de la cruz": ["caravaca"],
+        "fuente álamo": ["álamo", "alamo"],
+        "mazarrón": ["mazarrón", "mazarron"],
+        "águilas": ["águilas", "aguilas"],
+        "totana": ["totana"],
+        "alhama": ["alhama"],
+        "puerto lumbreras": ["lumbreras"],
+        "archena": ["archena"],
+        "cieza": ["cieza"],
+        "yecla": ["yecla"],
+        "jumilla": ["jumilla"],
+        "murcia": ["murcia"],
+        "alcantarilla": ["alcantarilla"],
+        "infante": ["infante"],
+        "santomera": ["santomera"],
+        "san javier": ["javier"],
+        "torre pacheco": ["pacheco"],
+    }
+
+    palabra_a_topicos = defaultdict(dict)
+
+    for topico, palabras in mapa_topico_palabras.items():
+
+        # Caso: lista de palabras (peso = 1)
+        if isinstance(palabras, list):
+            for palabra in palabras:
+                palabra_a_topicos[palabra.lower()][topico] = 1
+
+        # Caso: dict palabra -> peso
+        elif isinstance(palabras, dict):
+            for palabra, peso in palabras.items():
+                palabra_a_topicos[palabra.lower()][topico] = peso
+
+        else:
+            raise ValueError(
+                f"Formato no soportado en el tópico '{topico}'"
+            )
+
+    tokens = re.findall(r'\b\w+\b', texto)
+
+    conteo_palabras = Counter()
+    conteo_topicos = Counter()
+
+    for token in tokens:
+        if token not in palabra_a_topicos:
+            continue
+
+        conteo_palabras[token] += 1
+
+        for topico, peso in palabra_a_topicos[token].items():
+            conteo_topicos[topico] += peso
+
+    if not conteo_topicos:
+        return {}, {}, []
+
+    max_score = max(conteo_topicos.values())
+    topicos_top = [
+        topico for topico, score in conteo_topicos.items()
+        if score == max_score
+    ]
+
+    return dict(conteo_palabras), dict(conteo_topicos), topicos_top
+
+
+def detectar_escuela( texto: str ):
+    try:
+        palabras, topicos, top = detectar_aparicion_escuela(texto)
+        return top[0] if top else ""
+    except Exception as e:
+        return ""
