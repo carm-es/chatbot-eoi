@@ -54,6 +54,7 @@ def detectar_aparicion_escuela( texto: str ):
     texto = texto.lower()
     mapa_topico_palabras = {
         "caravaca de la cruz": ["caravaca"],
+        "cartagena": ["cartagena"],
         "fuente álamo": ["álamo", "alamo"],
         "mazarrón": ["mazarrón", "mazarron"],
         "águilas": ["águilas", "aguilas"],

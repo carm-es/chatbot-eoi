@@ -10,15 +10,15 @@ client = bigquery.Client()
 
 TABLE_ID = os.getenv("TABLE")
 
-async def insert_interaction(session_id: str, interaction_id: str, source: str, user_input: str, language: str, dialog_response: str, code: str, info_cli: Dict[str, str] = None):
+async def insert_interaction(session_id: str, interaction_id: str, source: str, user_input: str, language: str, dialog_response: str, code: str, info_cli: Dict[str, str] = None, school: str=""):
 
     """
     Inserta una nueva interacción en la tabla de BigQuery.
     """
     timestamp = datetime.now(timezone.utc)
     query = f"""
-        INSERT INTO `{TABLE_ID}` (session_id, interaction_id, source, user_input, language, dialog_response, timestamp, dialogflow_code, client_ip, client_user_agent, client_referer )
-        VALUES (@session_id, @interaction_id, @source, @user_input, @language, @dialog_response, @timestamp, @dialogflow_code, @cli_ip, @cli_ua, @cli_rf )
+        INSERT INTO `{TABLE_ID}` (session_id, interaction_id, source, user_input, language, dialog_response, timestamp, dialogflow_code, client_ip, client_user_agent, client_referer, context_school )
+        VALUES (@session_id, @interaction_id, @source, @user_input, @language, @dialog_response, @timestamp, @dialogflow_code, @cli_ip, @cli_ua, @cli_rf, @ctx_school)
     """
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -33,6 +33,7 @@ async def insert_interaction(session_id: str, interaction_id: str, source: str, 
             bigquery.ScalarQueryParameter("cli_ip", "STRING", info_cli['ip']),
             bigquery.ScalarQueryParameter("cli_ua", "STRING", info_cli['user_agent']),
             bigquery.ScalarQueryParameter("cli_rf", "STRING", info_cli['referer'] ),
+            bigquery.ScalarQueryParameter("ctx_school", "STRING",  school ),
         ]
     )
     try:

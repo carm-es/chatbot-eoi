@@ -102,7 +102,8 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
         language=input_language,
         dialog_response=final_response,
         code=dialogflow_code,
-        info_cli=client_info
+        info_cli=client_info,
+        school=usage_school
     )
     return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language, "school": usage_school }
 
@@ -174,7 +175,8 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
         language=input_language,
         dialog_response=final_response,
         code=dialogflow_code,
-        info_cli=client_info
+        info_cli=client_info,
+        school=usage_school
     )
     return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language, "school": usage_school }
 
