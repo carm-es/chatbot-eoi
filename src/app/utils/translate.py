@@ -70,6 +70,8 @@ def detectar_aparicion_escuela( texto: str ):
         "infante": ["infante"],
         "santomera": ["santomera"],
         "san javier": ["javier"],
+        "lorca": ["lorca"],
+        "molina de segura": ["segura"],
         "torre pacheco": ["pacheco"],
     }
 
