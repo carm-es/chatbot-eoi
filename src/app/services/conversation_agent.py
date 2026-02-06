@@ -89,6 +89,8 @@ def send_message(text: str, session_id: str = None, school: str = "murcia" ):
     )
 
     response_id = "NULL_ID"
+    user_summary = ""
+    user_language = ""
     try:
         request = dialogflowcx.DetectIntentRequest(
             session=session_path,
@@ -99,6 +101,10 @@ def send_message(text: str, session_id: str = None, school: str = "murcia" ):
         response = session_client.detect_intent(request=request)
         message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
         response_id = response.response_id
+
+        session_params = response.query_result.parameters
+        user_summary = session_params.get('user_summary', '')
+        user_language = session_params.get('detected_language', '')
 
         response_info = get_response_info(message)
 
@@ -111,5 +117,5 @@ def send_message(text: str, session_id: str = None, school: str = "murcia" ):
         response_result = "ERROR"
         response_raw = f"Error en llamada a Dialogflow: {str(e)}"
 
-    return {"message": response_message, "session_id": session_id, "response_id": response_id, "code_result": response_result, "raw_response": response_raw}
+    return {"message": response_message, "session_id": session_id, "response_id": response_id, "code_result": response_result, "raw_response": response_raw, "out_language": user_language, "out_summary": user_summary }
 

@@ -87,8 +87,10 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     response_id = response_data["response_id"]
     dialogflow_code = response_data["code_result"]
     raw_resp = response_data["raw_response"]
+    out_param_language = response_data["out_language"]
+    out_param_summary = response_data["out_summary"]
 
-    logging.info(f"Respuesta en español de Dialogflow: '{response_es}' y  raw='{raw_resp}' y además EL REST={dialogflow_code}")
+    logging.info(f"Respuesta en español de Dialogflow: '{response_es}' y  raw='{raw_resp}' y además EL REST={dialogflow_code} / sumary={out_param_summary} / language={out_param_language} ")
 
     final_response = translate_text(response_es, input_language)
     final_response = unescape_html(final_response)
