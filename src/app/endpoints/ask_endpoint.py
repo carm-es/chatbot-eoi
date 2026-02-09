@@ -81,7 +81,7 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     logging.info(f"Escuela recibida: '{school}' | Escuela detectada: {detected_school} | Se usará: {usage_school}")
 
     logging.info(f"Pregunta en español enviada para Dialogflow: '{message_es}'")
-    response_data = conversation_agent.send_message(message_es, session_id, usage_school, summary )
+    response_data = conversation_agent.send_message(message, session_id, usage_school, summary )
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
@@ -161,7 +161,7 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
 
     logging.info(f"Escuela recibida: '{school}' | Escuela detectada: {detected_school} | Se usará: {usage_school}")
 
-    response_data = conversation_agent.send_message(text_es, session_id, usage_school, summary)
+    response_data = conversation_agent.send_message(text, session_id, usage_school, summary)
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
