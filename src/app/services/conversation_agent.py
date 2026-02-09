@@ -5,7 +5,7 @@ import random
 import logging
 from dotenv import load_dotenv
 from typing import Dict
-from datetime import datetime
+from datetime import datetime, date
 from google.cloud import dialogflowcx_v3beta1 as dialogflowcx
 
 
@@ -34,7 +34,10 @@ def get_current_month():
         "enero", "febrero", "marzo", "abril", "mayo", "junio",
         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ]
-    return MESES_ES[datetime.now().month - 1]
+    hoy = date.today()
+    #### mes = MESES_ES[datetime.now().month - 1]
+    #### return f"{hoy.day} de {mes} de {hoy.year}"
+    return f"{hoy.year:04d}-{hoy.month:02d}-{hoy.day:02d}"
 
 
 def get_response_info(message: str) -> Dict[str, str]:
@@ -58,7 +61,7 @@ def get_response_info(message: str) -> Dict[str, str]:
         "response": get_response()
     }
 
-def send_message(text: str, session_id: str = None, school: str = "murcia" ):
+def send_message(text: str, session_id: str = None, school: str = "murcia" , summary: str ="" ):
     """
     Send the message to the agent
 
@@ -81,7 +84,8 @@ def send_message(text: str, session_id: str = None, school: str = "murcia" ):
     # Inyectar variables de contexto
     context_params = {
         "escuela": school,
-        "mes_actual": get_current_month()
+        "resumen": summary,
+        "hoy": get_current_month()
     }
     query_params = dialogflowcx.QueryParameters(
         parameters=context_params,

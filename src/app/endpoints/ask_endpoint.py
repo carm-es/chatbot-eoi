@@ -34,7 +34,7 @@ def get_client_info(request: Request) -> Dict[str, str]:
     }
 
 @router.post('/ask/text')
-async def ask_text(message: str = Form(...), session_id: str = Form(None), language: str = Form(None), school: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
+async def ask_text(message: str = Form(...), session_id: str = Form(None), language: str = Form(None), school: str = Form(None), summary: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
 
     """
     Endpoint to send text messages to the agent.
@@ -81,7 +81,7 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     logging.info(f"Escuela recibida: '{school}' | Escuela detectada: {detected_school} | Se usará: {usage_school}")
 
     logging.info(f"Pregunta en español enviada para Dialogflow: '{message_es}'")
-    response_data = conversation_agent.send_message(message_es, session_id, usage_school )
+    response_data = conversation_agent.send_message(message_es, session_id, usage_school, summary )
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
@@ -110,10 +110,10 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
         info_cli=client_info,
         school=usage_school
     )
-    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": idioma, "school": usage_school , "conversation": out_param_summary }
+    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": idioma, "school": usage_school, "conversation": out_param_summary }
 
 @router.post('/ask/voice')
-async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), language: str = Form(None), school: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
+async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), language: str = Form(None), school: str = Form(None), summary: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
     """
     Endpoint to send voice messages to the agent.
 
@@ -161,7 +161,7 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
 
     logging.info(f"Escuela recibida: '{school}' | Escuela detectada: {detected_school} | Se usará: {usage_school}")
 
-    response_data = conversation_agent.send_message(text_es, session_id, usage_school)
+    response_data = conversation_agent.send_message(text_es, session_id, usage_school, summary)
     response_es = response_data["message"]
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
