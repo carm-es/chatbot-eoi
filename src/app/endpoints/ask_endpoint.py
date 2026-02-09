@@ -90,9 +90,12 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
     out_param_language = response_data["out_language"]
     out_param_summary = response_data["out_summary"]
 
-    logging.info(f"Respuesta en español de Dialogflow: '{response_es}' y  raw='{raw_resp}' y además EL REST={dialogflow_code} / sumary={out_param_summary} / language={out_param_language} ")
+    logging.info(f"Respuesta (DEL TEXTO) en español de Dialogflow: '{response_es}' y  raw='{raw_resp}' y además EL REST={dialogflow_code} / sumary={out_param_summary} / language={out_param_language} ")
+    idioma=input_language
+    if out_param_language and out_param_language != '' and out_param_language != 'und' :
+        idioma = out_param_language
 
-    final_response = translate_text(response_es, input_language)
+    final_response = translate_text(response_es, idioma)
     final_response = unescape_html(final_response)
     logging.info(f"Session ID: {session_id} - Response ID: {response_id}")
 
@@ -107,7 +110,7 @@ async def ask_text(message: str = Form(...), session_id: str = Form(None), langu
         info_cli=client_info,
         school=usage_school
     )
-    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language, "school": usage_school }
+    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": idioma, "school": usage_school , "conversation": out_param_summary }
 
 @router.post('/ask/voice')
 async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), language: str = Form(None), school: str = Form(None), client_info: Dict[str, str] = Depends(get_client_info) ):
@@ -163,9 +166,15 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
     session_id = response_data["session_id"]
     response_id = response_data["response_id"]
     dialogflow_code = response_data["code_result"]
-    logging.info(f"Respuesta en español de Dialogflow: '{response_es}'")
+    out_param_language = response_data["out_language"]
+    out_param_summary = response_data["out_summary"]
 
-    final_response = translate_text(response_es, input_language)
+    logging.info(f"Respuesta (DEL AUDIO) en español de Dialogflow: '{response_es}'  y además EL REST={dialogflow_code} / sumary={out_param_summary} / language={out_param_language} ")
+    idioma=input_language
+    if out_param_language and out_param_language != '' and out_param_language != 'und' :
+        idioma = out_param_language
+
+    final_response = translate_text(response_es, idioma)
     final_response = unescape_html(final_response)
     logging.info(f"Session ID: {session_id} - Response ID: {response_id}")
 
@@ -180,7 +189,7 @@ async def ask_voice(file: UploadFile = File(...), session_id: str = Form(None), 
         info_cli=client_info,
         school=usage_school
     )
-    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": input_language, "school": usage_school }
+    return {"response": final_response, "session_id": session_id, "response_id": response_id, "language": idioma, "school": usage_school , "conversation": out_param_summary }
 
 class RateRequest(BaseModel):
     response_id: str
