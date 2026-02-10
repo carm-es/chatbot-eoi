@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 import random
+import re
 import logging
 from dotenv import load_dotenv
 from typing import Dict
@@ -28,6 +29,32 @@ NOT_FOUND = ["Lo siento, pero no tengo información suficiente para poder respon
              "Ahora mismo no tengo datos para responder, pero me actualizan constantemente, pregúntame algo más a ver como sale 😅"]
 
 session_client = dialogflowcx.SessionsClient()
+
+def process_response(text: str) -> Dict[str, str]:
+    contest = {}
+
+    # Regex para los campos
+    summary_match = re.search(
+        r"user_summary:\s*(.*?)(?=detected_language:|$)",
+        text,
+        re.IGNORECASE | re.DOTALL
+    )
+
+    lang_match = re.search(
+        r"detected_language:\s*(.*?)(?=user_summary:|$)",
+        text,
+        re.IGNORECASE | re.DOTALL
+    )
+
+    contest["resumen"] = summary_match.group(1).strip() if summary_match else ""
+    contest["lang"] = lang_match.group(1).strip() if lang_match else ""
+
+    message = re.sub(r"user_summary:.*?(?=detected_language:|$)", "", text, flags=re.IGNORECASE | re.DOTALL)
+    message = re.sub(r"detected_language:.*?(?=user_summary:|$)", "", message, flags=re.IGNORECASE | re.DOTALL)
+
+    contest["message"] = message.strip()
+
+    return contest
 
 def get_current_month():
     MESES_ES = [
@@ -112,9 +139,19 @@ def send_message(text: str, session_id: str = None, school: str = "murcia" , sum
 
         response_info = get_response_info(message)
 
-        response_message =  response_info['response']
+        contest = process_response(response_info['response'])
+        response_message =  contest["message"]
         response_result = response_info['result']
         response_raw = response_info['raw']
+
+        if not user_summary or user_summary == '':
+            if contest["resumen"] and  contest["resumen"] != '':
+                user_summary = contest["resumen"]
+
+        if not user_language or user_language == '':
+            if contest["lang"] and contest["lang"] != '':
+                user_language = contest["lang"]
+
 
     except Exception as e:
         response_message = random.choice(NOT_FOUND)
