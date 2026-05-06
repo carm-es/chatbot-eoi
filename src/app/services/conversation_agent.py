@@ -88,6 +88,30 @@ def get_response_info(message: str) -> Dict[str, str]:
         "response": get_response()
     }
 
+
+def extract_dialogflow_text(response):
+    """
+    Intenta extraer el primer mensaje de texto disponible.
+    Si no encuentra ninguno, levanta una excepción.
+    """
+    try:
+        messages = response.query_result.response_messages
+
+        if not messages:
+            raise ValueError("La lista de response_messages está vacía.")
+
+        for msg in messages:
+            # Verificamos si el mensaje tiene el atributo 'text' y contiene datos
+            if hasattr(msg, 'text') and msg.text.text:
+                # Retornamos el primer string encontrado en la lista de textos
+                return msg.text.text[0]
+
+        # Si recorre todos los mensajes y ninguno es de texto
+        raise ValueError("No se encontró ningún mensaje de tipo texto en la respuesta.")
+
+    except (AttributeError, IndexError) as e:
+        raise ValueError(f"Error de estructura al extraer el texto: '{str(e)}' del objeto '{str(response)}'")
+
 def send_message(text: str, session_id: str = None, school: str = "murcia" , summary: str ="" ):
     """
     Send the message to the agent
@@ -130,7 +154,7 @@ def send_message(text: str, session_id: str = None, school: str = "murcia" , sum
         )
 
         response = session_client.detect_intent(request=request)
-        message = response.query_result.response_messages[0].text.text[0] if response.query_result.response_messages else ""
+        message = extract_dialogflow_text(response)
         response_id = response.response_id
 
         session_params = response.query_result.parameters
@@ -156,7 +180,7 @@ def send_message(text: str, session_id: str = None, school: str = "murcia" , sum
     except Exception as e:
         response_message = random.choice(NOT_FOUND)
         response_result = "ERROR"
-        response_raw = f"Error en llamada a Dialogflow: {str(e)}"
+        response_raw = f"Error en llamada a Dialogflow: '{str(e)}' "
 
     return {"message": response_message, "session_id": session_id, "response_id": response_id, "code_result": response_result, "raw_response": response_raw, "out_language": user_language, "out_summary": user_summary }
 
